@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Are You Definitely Alone? — ты точно один?</title>
+<meta name="description" content="Психологический хоррор от первого лица: ночная смена в офисе, фонарик, генератор и то, что ждёт, когда погаснет свет.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0d10'/%3E%3Ccircle cx='16' cy='16' r='6' fill='none' stroke='%23ffd9a0' stroke-width='2'/%3E%3Cpath d='M4 28 L14 20' stroke='%23ffd9a0' stroke-width='2'/%3E%3Cpath d='M28 28 L18 20' stroke='%23ffd9a0' stroke-width='2'/%3E%3C/svg%3E">
+<style>
+:root{
+	--ink:#0a0d10;
+	--ink-2:#0e1317;
+	--fog:#1a2027;
+	--fog-2:#232b33;
+	--mist:#8b98a3;
+	--text:#c7d0d6;
+	--dim:#7d8892;
+	--amber:#ffd9a0;
+	--amber-deep:#e8a95c;
+	--rust:#b0552a;
+	--blood:#8c1f1f;
+	--line:rgba(139,152,163,.16);
+	--radius:14px;
+	--font-display:"Segoe UI",Verdana,system-ui,sans-serif;
+	--font-body:"Segoe UI",system-ui,sans-serif;
+	--font-mono:"Cascadia Mono","Consolas",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+	background:var(--ink);
+	color:var(--text);
+	font-family:var(--font-body);
+	line-height:1.65;
+	overflow-x:hidden;
+}
+::selection{background:rgba(255,217,160,.25);color:#fff}
+
+/* ---------- служебное ---------- */
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+.reveal.on{opacity:1;transform:none}
+a{color:var(--amber);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------- дождь ---------- */
+#rain{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.5}
+
+/* ---------- туманные слои ---------- */
+.fogband{
+	position:fixed;left:-4%;right:-4%;height:34vh;z-index:1;pointer-events:none;
+	background:radial-gradient(120% 90% at 50% 120%,rgba(26,32,39,0) 0%,rgba(26,32,39,.5) 60%,rgba(26,32,39,0) 100%);
+	bottom:-8vh;
+	will-change:transform;
+	animation:fogdrift 46s ease-in-out infinite alternate;
+}
+.fogband.b2{
+	bottom:auto;top:-6vh;opacity:.55;
+	animation-duration:64s;animation-direction:alternate-reverse;
+}
+/* На слабых машинах туман можно отключить целиком — ниже он заглушается,
+   а если анимации запрещены системно, полосы замирают и не жрут композитор. */
+@media(prefers-reduced-motion:reduce){ .fogband{animation:none} }
+@keyframes fogdrift{from{transform:translateX(-4%)}to{transform:translateX(4%)}}
+
+/* ---------- навигация ---------- */
+nav{
+	position:fixed;top:0;left:0;right:0;z-index:50;
+	background:rgba(10,13,16,.92);
+	border-bottom:1px solid var(--line);
+}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:.06em;color:var(--text);font-size:.92rem;text-transform:uppercase}
+.brand .lampicon{width:22px;height:22px;flex:none;filter:drop-shadow(0 0 6px rgba(255,217,160,.5))}
+nav ul{display:flex;gap:26px;list-style:none}
+nav ul a{color:var(--dim);font-size:.88rem;letter-spacing:.04em;transition:color .25s}
+nav ul a:hover{color:var(--amber);text-decoration:none}
+
+/* ---------- герой ---------- */
+header.hero{
+	position:relative;min-height:100svh;display:flex;align-items:center;
+	padding:120px 0 80px;
+	background:
+		radial-gradient(60% 46% at 68% 34%,rgba(255,196,120,.10) 0%,rgba(255,196,120,0) 60%),
+		linear-gradient(180deg,#07090b 0%,var(--ink) 55%,#0c1114 100%);
+	overflow:hidden;
+}
+header.hero::after{ /* луч фонарика из-за угла */
+	content:"";position:absolute;inset:0;pointer-events:none;
+	background:conic-gradient(from 208deg at 74% 30%,rgba(255,220,170,.07) 0deg,14deg,rgba(255,220,170,0) 16deg);
+}
+.hero .eyebrow{
+	font-family:var(--font-mono);font-size:.8rem;letter-spacing:.32em;color:var(--dim);
+	text-transform:uppercase;margin-bottom:26px;
+}
+.hero h1{
+	font-family:var(--font-display);
+	font-size:clamp(2.6rem,7.5vw,5.4rem);
+	line-height:1.04;font-weight:800;color:#eef2f4;
+	letter-spacing:-.01em;max-width:14ch;
+	text-shadow:0 0 42px rgba(255,217,160,.14);
+}
+.hero h1 .flicker{color:var(--amber);animation:flick 7s infinite steps(1)}
+@keyframes flick{
+	0%,88.6%,89.4%,92.2%,100%{opacity:1;text-shadow:0 0 30px rgba(255,217,160,.35)}
+	89%,92%{opacity:.25;text-shadow:none}
+}
+.hero .tagline{
+	margin-top:22px;font-size:clamp(1.02rem,2.1vw,1.3rem);color:var(--mist);max-width:52ch;
+}
+.hero .tagline b{color:var(--amber-deep);font-weight:600}
+.hero .sub{
+	margin-top:14px;font-family:var(--font-mono);color:var(--dim);font-size:.85rem;letter-spacing:.14em;
+}
+.hero .cta{display:flex;gap:16px;margin-top:44px;flex-wrap:wrap}
+.btn{
+	display:inline-flex;align-items:center;gap:10px;
+	padding:14px 28px;border-radius:var(--radius);
+	font-weight:600;font-size:.95rem;letter-spacing:.03em;
+	border:1px solid transparent;transition:all .3s ease;
+}
+.btn-warm{
+	background:linear-gradient(180deg,rgba(255,217,160,.16),rgba(255,217,160,.06));
+	border-color:rgba(255,217,160,.35);color:var(--amber);
+}
+.btn-warm:hover{background:rgba(255,217,160,.22);box-shadow:0 0 30px rgba(255,217,160,.18);text-decoration:none}
+.btn-ghost{border-color:var(--line);color:var(--mist)}
+.btn-ghost:hover{border-color:rgba(139,152,163,.4);color:var(--text);text-decoration:none}
+.hero .meta{
+	position:absolute;right:28px;bottom:26px;text-align:right;
+	font-family:var(--font-mono);font-size:.72rem;color:var(--dim);letter-spacing:.1em;line-height:2;
+}
+.hero .meta .status{color:var(--amber-deep)}
+
+/* ---------- секции ---------- */
+section{position:relative;z-index:3;padding:96px 0}
+.sec-head{margin-bottom:46px}
+.sec-head .kicker{
+	font-family:var(--font-mono);color:var(--amber-deep);font-size:.78rem;
+	letter-spacing:.3em;text-transform:uppercase;
+}
+.sec-head h2{
+	font-family:var(--font-display);font-size:clamp(1.7rem,3.6vw,2.5rem);
+	color:#e8edf0;font-weight:700;margin-top:10px;letter-spacing:-.01em;
+}
+.sec-head p{color:var(--dim);margin-top:12px;max-width:62ch}
+
+/* ---------- о игре ---------- */
+.about-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+.card{
+	background:linear-gradient(180deg,var(--ink-2),#0b0f12);
+	border:1px solid var(--line);border-radius:var(--radius);
+	padding:26px 24px;transition:transform .35s ease,border-color .35s ease;
+}
+.card:hover{transform:translateY(-4px);border-color:rgba(255,217,160,.28)}
+.card .ic{font-size:1.5rem;margin-bottom:14px;display:block}
+.card h3{color:#dfe6ea;font-size:1.05rem;margin-bottom:10px;font-weight:600}
+.card p{color:var(--dim);font-size:.92rem}
+
+/* ---------- ночи (таймлайн) ---------- */
+.nights{position:relative;margin-top:10px}
+.nights::before{
+	content:"";position:absolute;left:19px;top:6px;bottom:6px;width:1px;
+	background:linear-gradient(180deg,rgba(255,217,160,.35),var(--line) 70%);
+}
+.night{
+	position:relative;padding:0 0 34px 62px;
+}
+.night .dotn{
+	position:absolute;left:6px;top:2px;width:28px;height:28px;border-radius:50%;
+	background:var(--ink);border:1px solid rgba(255,217,160,.4);
+	display:flex;align-items:center;justify-content:center;
+	font-family:var(--font-mono);font-size:.72rem;color:var(--amber);
+	box-shadow:0 0 14px rgba(255,217,160,.12);
+}
+.night h3{color:#dfe6ea;font-size:1.02rem;font-weight:600}
+.night h3 .nsub{color:var(--dim);font-weight:400;font-style:italic}
+.night p{color:var(--dim);font-size:.92rem;margin-top:6px;max-width:60ch}
+.night.n7 .dotn{border-color:rgba(140,31,31,.7);color:#d08080;box-shadow:0 0 14px rgba(140,31,31,.25)}
+
+/* ---------- механики ---------- */
+.mech-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.mech{
+	display:flex;gap:12px;align-items:flex-start;
+	background:rgba(20,26,31,.5);border:1px solid var(--line);border-radius:10px;
+	padding:16px 16px;font-size:.9rem;color:var(--mist);
+}
+.mech .b{color:var(--amber-deep);flex:none;font-family:var(--font-mono);font-size:.8rem;padding-top:2px}
+
+/* ---------- тёмная комната ---------- */
+.room{
+	position:relative;border-radius:var(--radius);
+	border:1px solid var(--line);overflow:hidden;
+	background:#050708;cursor:crosshair;
+	min-height:420px;
+}
+.room .scene{
+	position:absolute;inset:0;padding:48px;
+	display:flex;flex-direction:column;justify-content:space-between;
+}
+.room .note{
+	font-family:var(--font-mono);color:#9db4c0;font-size:.85rem;
+	max-width:34ch;line-height:1.9;
+}
+.room .silhouette{
+	position:absolute;right:6%;bottom:0;width:min(300px,42%);
+	opacity:.9;pointer-events:none;
+}
+.room .eyes{
+	position:absolute;left:18%;top:34%;display:flex;gap:26px;pointer-events:none;
+}
+.room .eyes i{
+	width:11px;height:11px;border-radius:50%;
+	background:radial-gradient(circle,#ff5540 0%,#a01818 60%,transparent 70%);
+	box-shadow:0 0 18px rgba(255,60,40,.55);
+	filter:blur(.4px);
+}
+.room .eyes{animation:blink 6.5s infinite}
+@keyframes blink{0%,91%,100%{opacity:.9}93%{opacity:0}95%{opacity:.9}97%{opacity:0}}
+.room .veil{
+	position:absolute;inset:0;pointer-events:none;
+	background:radial-gradient(circle 170px at var(--mx,50%) var(--my,50%),
+		rgba(5,7,8,0) 0%,rgba(5,7,8,0) 55%,rgba(5,7,8,.93) 100%);
+	transition:background .12s linear;
+}
+.room .glow{
+	position:absolute;inset:0;pointer-events:none;
+	background:radial-gradient(circle 190px at var(--mx,50%) var(--my,50%),
+		rgba(255,214,160,.07) 0%,rgba(255,214,160,0) 70%);
+}
+.room .hint{
+	font-family:var(--font-mono);font-size:.75rem;color:var(--dim);letter-spacing:.22em;
+	text-transform:uppercase;text-align:center;
+}
+
+/* ---------- новости ---------- */
+.news-list{display:grid;gap:16px}
+.post{
+	border:1px solid var(--line);border-left:3px solid rgba(255,217,160,.4);
+	border-radius:0 var(--radius) var(--radius) 0;
+	background:linear-gradient(180deg,var(--ink-2),#0b0f12);
+	padding:22px 26px;
+}
+.post.warm{border-left-color:var(--amber)}
+.post.alert{border-left-color:var(--blood)}
+.post .ph{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px}
+.post time{font-family:var(--font-mono);font-size:.75rem;color:var(--dim);letter-spacing:.08em}
+.post .tag{
+	font-family:var(--font-mono);font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;
+	padding:3px 10px;border-radius:99px;border:1px solid var(--line);color:var(--mist);
+}
+.post .tag.dev{border-color:rgba(255,217,160,.4);color:var(--amber)}
+.post .tag.alert{border-color:rgba(140,31,31,.6);color:#d08484}
+.post h3{color:#e0e6ea;font-size:1.05rem;font-weight:600;margin-bottom:6px}
+.post p{color:var(--dim);font-size:.93rem;max-width:70ch}
+.addnote{
+	margin-top:26px;padding:18px 22px;border:1px dashed var(--line);border-radius:var(--radius);
+	font-family:var(--font-mono);font-size:.78rem;color:var(--dim);line-height:1.9;
+}
+.addnote code{color:var(--amber-deep)}
+
+/* ---------- футер ---------- */
+footer{
+	position:relative;z-index:3;border-top:1px solid var(--line);
+	padding:56px 0 40px;background:#080b0d;
+}
+footer .radio{
+	font-family:var(--font-mono);color:var(--mist);font-size:.85rem;letter-spacing:.06em;
+	max-width:46ch;line-height:2;
+}
+footer .radio .z{color:var(--amber-deep)}
+footer .base{
+	margin-top:26px;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;
+	color:var(--dim);font-size:.78rem;font-family:var(--font-mono);letter-spacing:.1em;
+}
+
+/* ---------- адаптив и доступность ---------- */
+@media(max-width:720px){
+	nav ul{display:none}
+	.room .scene{padding:26px}
+	.room .silhouette{width:60%}
+}
+@media(prefers-reduced-motion:reduce){
+	.fogband{animation:none}
+	.hero h1 .flicker{animation:none}
+	.room .eyes{animation:none}
+	.reveal{transition:none;opacity:1;transform:none}
+	html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<canvas id="rain" aria-hidden="true"></canvas>
+<div class="fogband" aria-hidden="true"></div>
+<div class="fogband b2" aria-hidden="true"></div>
+
+<nav>
+	<div class="wrap">
+		<a class="brand" href="#top">
+			<svg class="lampicon" viewBox="0 0 32 32" aria-hidden="true">
+				<circle cx="16" cy="16" r="6" fill="none" stroke="#ffd9a0" stroke-width="2"/>
+				<path d="M4 28 L14 20" stroke="#ffd9a0" stroke-width="2"/>
+				<path d="M28 28 L18 20" stroke="#ffd9a0" stroke-width="2"/>
+			</svg>
+			Are&nbsp;You&nbsp;Definitely&nbsp;Alone?
+		</a>
+		<ul>
+			<li><a href="#about">Об игре</a></li>
+			<li><a href="#nights">Семь ночей</a></li>
+			<li><a href="#mech">Механики</a></li>
+			<li><a href="#room">Не выключай свет</a></li>
+			<li><a href="#news">Новости</a></li>
+		</ul>
+	</div>
+</nav>
+
+<header class="hero" id="top">
+	<div class="wrap">
+		<p class="eyebrow">Психологический хоррор · от первого лица</p>
+		<h1>Are You Definitely <span class="flicker">Alone?</span></h1>
+		<p class="tagline">Ночная смена в тихом офисном комплексе. Уборщик. Потом — охранник. Рутина, mop, ведро, фонарик. И ощущение, что <b>кто-то смотрит</b> — всю смену, каждый день.</p>
+		<p class="sub">СВЕТ — ЭТО ЖИЗНЬ. ОНО ЖДЁТ, КОГДА ТЫ ЕГО ВЫКЛЮЧИШЬ.</p>
+		<div class="cta">
+			<a class="btn btn-warm" href="#news">Дневник разработки</a>
+			<a class="btn btn-ghost" href="#about">Что это за игра</a>
+		</div>
+	</div>
+	<div class="meta">
+		<div>ENGINE — GODOT 4</div>
+		<div>GENRE — FIRST-PERSON HORROR</div>
+		<div class="status" id="statusline">STATUS — В РАЗРАБОТКЕ · ПРОТОТИП</div>
+	</div>
+</header>
+
+<section id="about">
+	<div class="wrap">
+		<div class="sec-head reveal">
+			<p class="kicker">// что это</p>
+			<h2>Тихий офис. Ночь. Ты — не один.</h2>
+			<p>Герой в долгах берёт подозрительно хорошо оплачиваемую ночную работу. Сначала mop и ведро, потом — пост погибшего охранника. Семь ночей, чтобы понять, что объявление в газете было не для человека.</p>
+		</div>
+		<div class="about-grid">
+			<div class="card reveal">
+				<span class="ic">🔦</span>
+				<h3>Свет — ресурс</h3>
+				<p>Фонарик садится, батарейки кончаются, генератор ломается. Всё, что держит темноту на расстоянии, — расходный материал. Как и ты.</p>
+			</div>
+			<div class="card reveal">
+				<span class="ic">📻</span>
+				<h3>Оно не показывается</h3>
+				<p>Царапанье металла. Помехи на камерах. Шаги, которые останавливаются вместе с твоими. Монстра почти не видно — и это худшая часть.</p>
+			</div>
+			<div class="card reveal">
+				<span class="ic">🌧️</span>
+				<h3>Пасмурная ночь</h3>
+				<p>Косой дождь, густой туман, мигающие фонари над парковкой и переулок с генератором, куда не хочется возвращаться.</p>
+			</div>
+			<div class="card reveal">
+				<span class="ic">🧹</span>
+				<h3>Рутина как ужас</h3>
+				<p>Мыть полы, делать обходы, смотреть камеры, закрывать двери за спиной. Обычные задачи становятся ритуалом выживания.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section id="nights" style="background:linear-gradient(180deg,var(--ink) 0%,#0b0f13 50%,var(--ink) 100%)">
+	<div class="wrap">
+		<div class="sec-head reveal">
+			<p class="kicker">// структура</p>
+			<h2>Семь ночей</h2>
+			<p>Каждая ночь добавляет ровно одно новое. Оно приходит по частям — и только к финалу собирается целиком.</p>
+		</div>
+		<div class="nights">
+			<div class="night reveal"><span class="dotn">01</span>
+				<h3>Новая работа <span class="nsub">— записка на столбе: «Оно видит тебя»</span></h3>
+				<p>Кладовка, mop, ведро. Ничего необычного. Домой, телевизор, сон.</p>
+			</div>
+			<div class="night reveal"><span class="dotn">02</span>
+				<h3>Гроза <span class="nsub">— и лужа крови в туалете</span></h3>
+				<p>Свет отключается, приходится взять фонарик. Связи нет. Кровь приходится просто вымыть.</p>
+			</div>
+			<div class="night reveal"><span class="dotn">03</span>
+				<h3>Смена роли <span class="nsub">— в газете некролог охраннику</span></h3>
+				<p>Босс предлагает надбавку. Фонарик, батарейки, рация. Стук в дверь и записка: «Закрывай за собой. Дверь, будку, машину, дом».</p>
+			</div>
+			<div class="night reveal"><span class="dotn">04</span>
+				<h3>Царапанье в переулке <span class="nsub">— помехи на камере у генератора</span></h3>
+				<p>Свет в переулке мигает. Когти скребут по металлу над головой. Луч фонарика ничего не находит. В помехах — на долю секунды — силуэт.</p>
+			</div>
+			<div class="night reveal"><span class="dotn">05</span>
+				<h3>Радио и генератор <span class="nsub">— джаз, замедляющийся как прожёванная плёнка</span></h3>
+				<p>Записка у рации: «Чтобы тебе не было скучно. Не выключай. — Z.Ch.» Гроза гасит двор. В вспышке света — волк на двух лапах в конце переулка.</p>
+			</div>
+			<div class="night reveal"><span class="dotn">06</span>
+				<h3>Гость на территории <span class="nsub">— шантаж искажённым голосом</span></h3>
+				<p>Папка «Оно» в кабинете 204. Фото погибшего охранника — и то, что стоит над ним. Шаги, которые останавливаются вместе с твоими. Отпечаток лапы медленно проявляется на стекле будки.</p>
+			</div>
+			<div class="night n7 reveal"><span class="dotn">07</span>
+				<h3>Финал <span class="nsub">— «Оно не спит. Оно ждёт»</span></h3>
+				<p>Генератор отказывает, и нельзя дать свету умереть. Волк стоит в переулке и не двигается. Потом все камеры пусты, радио включает само себя — и оно уже в углу будки. Красные глаза. Твой выбор: луч фонарика или бегство.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section id="mech">
+	<div class="wrap">
+		<div class="sec-head reveal">
+			<p class="kicker">// геймплей</p>
+			<h2>Механики</h2>
+			<p>Прототип на Godot 4 уже умеет главное: перемещение, взаимодействие, инвентарь и фонарик, который садится и мерцает.</p>
+		</div>
+		<div class="mech-grid reveal">
+			<div class="mech"><span class="b">01</span>Открытие и закрытие дверей — закрывай за собой</div>
+			<div class="mech"><span class="b">02</span>Обходы территории по графику</div>
+			<div class="mech"><span class="b">03</span>Наблюдение через камеры наблюдения</div>
+			<div class="mech"><span class="b">04</span>Ремонт генератора — не дай свету умереть</div>
+			<div class="mech"><span class="b">05</span>Фонарик: мерцание, разряд, замена батареек</div>
+			<div class="mech"><span class="b">06</span>Мытьё полов как боевая задача</div>
+			<div class="mech"><span class="b">07</span>Подбор и укладка предметов</div>
+			<div class="mech"><span class="b">08</span>Поручения от неизвестных: украсть, починить, починить</div>
+		</div>
+	</div>
+</section>
+
+<section id="room" style="padding-top:20px">
+	<div class="wrap">
+		<div class="sec-head reveal">
+			<p class="kicker">// интерактив</p>
+			<h2>Не выключай свет</h2>
+			<p>Веди курсором по тёмной комнате — луч фонарика покажет то, что в темноте не видно. В темноте. Где-то в темноте.</p>
+		</div>
+		<div class="room reveal" id="darkroom" aria-label="Тёмная комната: ведите курсором, чтобы осветить">
+			<div class="scene">
+				<p class="note">Дневник сторожа, стр. 14:<br><br>«Оно не спит. Оно ждёт, когда ты выключишь свет. Не выключай. Оно боится света. Я выключил. Не выключай.»</p>
+				<p class="hint">веди лучом по комнате</p>
+			</div>
+			<svg class="silhouette" viewBox="0 0 200 260" aria-hidden="true">
+				<path d="M100 18 c-16 0 -26 12 -26 26 c0 10 4 18 10 23 c-4 2 -7 5 -9 9 l-6 26 c-2 9 -1 16 3 22 l-2 16 c-1 8 0 14 4 19 l-1 14 h8 l1 -12 c2 1 5 1 8 0 l1 12 h8 l-1 -15 c5 -6 7 -14 5 -23 l-3 -18 c3 -7 2 -15 -1 -23 l-8 -22 c-2 -4 -5 -7 -9 -9 c6 -5 10 -13 10 -23 c0 -14 -10 -26 -26 -26 z" fill="#0d1114"/>
+				<path d="M74 74 l-14 40 l6 3 l16 -34 z" fill="#0d1114"/>
+				<path d="M126 74 l14 40 l-6 3 l-16 -34 z" fill="#0d1114"/>
+			</svg>
+			<div class="eyes" aria-hidden="true"><i></i><i></i></div>
+			<div class="glow"></div>
+			<div class="veil"></div>
+		</div>
+	</div>
+</section>
+
+<section id="news" style="background:linear-gradient(180deg,var(--ink),#0b0f13)">
+	<div class="wrap">
+		<div class="sec-head reveal">
+			<p class="kicker">// дневник разработки</p>
+			<h2>Новости проекта</h2>
+			<p>Здесь появляется актуальная информация о разработке. Новые записи добавляются в массив <span style="font-family:var(--font-mono);color:var(--amber-deep)">NEWS</span> в конце файла.</p>
+		</div>
+		<div class="news-list" id="newslist"></div>
+		<div class="addnote">
+			Чтобы добавить новость: открой index.html, найди строку <code>const NEWS = [</code> и допиши запись вида<br>
+			<code>{ date:"2026-11-01", tag:"dev", title:"Заголовок", text:"Текст новости." }</code><br>
+			Допустимые теги: <code>dev</code> (разработка, янтарный), <code>alert</code> (тревожный, красный), любой другой — нейтральный серый.
+		</div>
+	</div>
+</section>
+
+<footer>
+	<div class="wrap">
+		<p class="radio">«Чтобы тебе не было скучно. Не выключай его. — <span class="z">Z.Ch.</span>»<br>— записка у рации, ночь пятая</p>
+		<div class="base">
+			<span>© <span id="year">2026</span> · ARE YOU DEFINITELY ALONE? · НЕОФИЦИАЛЬНЫЙ САЙТ ИГРЫ</span>
+			<span>ENGINE: GODOT 4 · FORWARD+</span>
+		</div>
+	</div>
+</footer>
+
+<script>
+/* ==========================================================
+   НОВОСТИ ПРОЕКТА — добавляй новые записи сюда.
+   tag: "dev" — разработка, "alert" — тревожная, прочее — нейтральная.
+   ========================================================== */
+const NEWS = [
+	{
+		date: "2026-10-25",
+		tag: "dev",
+		title: "Прототип: улица, дождь и туман",
+		text: "Уличная сцена обросла косым дождём и пасмурным туманом: капли видны только в свете фонаря и фонарика. Восемь фонарей получили режимы: горит, мигает, мёртв."
+	},
+	{
+		date: "2026-10-24",
+		tag: "dev",
+		title: "Фонарик дышит волнами",
+		text: "Свет проектора теперь пульсирует мягкими кольцами: ±8% яркости, медленная скорость. Амплитуду и скорость можно крутить прямо в шейдере."
+	},
+	{
+		date: "2026-10-24",
+		tag: "",
+		title: "Появилась батарейка",
+		text: "Низкополигональная D-элемент батарейка сгенерирована процедурно и легла в папку models. Появление в сцене — уже вопрос времени."
+	},
+	{
+		date: "2026-10-23",
+		tag: "",
+		title: "Сайт игры запущен",
+		text: "Эта страница теперь официальный дневник проекта. Записки Z.Ch. прилагаются."
+	}
+];
+
+/* ---------- рендер новостей ---------- */
+(function(){
+	const list = document.getElementById("newslist");
+	const monthNames = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+	const frag = document.createDocumentFragment();
+	for(const n of NEWS){
+		const d = new Date(n.date + "T12:00:00");
+		const dateStr = d.getDate() + " " + monthNames[d.getMonth()] + " " + d.getFullYear();
+		const el = document.createElement("article");
+		el.className = "post reveal" + (n.tag === "dev" ? " warm" : n.tag === "alert" ? " alert" : "");
+		const tagLabel = n.tag === "dev" ? "разработка" : n.tag === "alert" ? "тревога" : "заметка";
+		el.innerHTML =
+			'<div class="ph"><time>' + dateStr + '</time><span class="tag ' + (n.tag || "") + '">' + tagLabel + '</span></div>' +
+			'<h3></h3><p></p>';
+		el.querySelector("h3").textContent = n.title;
+		el.querySelector("p").textContent = n.text;
+		frag.appendChild(el);
+	}
+	list.appendChild(frag);
+})();
+
+/* ---------- появление при скролле ---------- */
+(function(){
+	const io = new IntersectionObserver((entries)=>{
+		for(const e of entries){
+			if(e.isIntersecting){ e.target.classList.add("on"); io.unobserve(e.target); }
+		}
+	},{threshold:.12});
+	document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+})();
+
+/* ---------- тёмная комната: луч фонарика ---------- */
+(function(){
+	const room = document.getElementById("darkroom");
+	let tx = 50, ty = 50, cx = 50, cy = 50, raf = null;
+	function setFromEvent(e){
+		const r = room.getBoundingClientRect();
+		tx = ((e.clientX - r.left) / r.width) * 100;
+		ty = ((e.clientY - r.top) / r.height) * 100;
+		if(!raf) raf = requestAnimationFrame(tick);
+	}
+	room.addEventListener("pointermove", setFromEvent, {passive:true});
+	room.addEventListener("pointerdown", setFromEvent, {passive:true});
+	room.addEventListener("pointerleave", ()=>{ tx = 50; ty = 50; if(!raf) raf = requestAnimationFrame(tick); });
+	function tick(){
+		cx += (tx - cx) * 0.16;
+		cy += (ty - cy) * 0.16;
+		room.style.setProperty("--mx", cx.toFixed(2) + "%");
+		room.style.setProperty("--my", cy.toFixed(2) + "%");
+		/* rAF работает ТОЛЬКО пока луч догоняет курсор; дожал — полный покой */
+		if(Math.abs(tx - cx) < .05 && Math.abs(ty - cy) < .05){
+			raf = null; return;
+		}
+		raf = requestAnimationFrame(tick);
+	}
+	room.style.setProperty("--mx","50%");
+	room.style.setProperty("--my","50%");
+})();
+
+/* ---------- дождь ---------- */
+(function(){
+	const c = document.getElementById("rain");
+	const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	if(reduced){ c.style.display = "none"; return; }
+	const ctx = c.getContext("2d");
+
+	/* Плитка дождя рисуется ОДИН раз на офскрин-канвасе.
+	   Дальше каждый кадр — несколько drawImage вместо сотен штрихов:
+	   это на порядок дешевле и не создаёт мусора для сборщика. */
+	function makeTile(size, count, alpha, lenMin, lenMax){
+		const t = document.createElement("canvas");
+		t.width = size; t.height = size;
+		const g = t.getContext("2d");
+		g.lineWidth = 1;
+		g.strokeStyle = "rgba(150,170,190," + alpha + ")";
+		g.beginPath();
+		for(let i = 0; i < count; i++){
+			const x = Math.random() * size;
+			const y = Math.random() * size;
+			const len = lenMin + Math.random() * (lenMax - lenMin);
+			g.moveTo(x, y);
+			g.lineTo(x - len * 0.12, y - len); /* тот же косой ветер */
+		}
+		g.stroke();
+		return t;
+	}
+	const S = 512;
+	const tileFar  = makeTile(S, 60, .15, 8, 13);   /* дальний, мелкий */
+	const tileNear = makeTile(S, 40, .24, 14, 22);  /* ближний, крупный */
+
+	let W = 0, H = 0;
+	function resize(){
+		W = c.width = window.innerWidth;
+		H = c.height = window.innerHeight;
+	}
+	window.addEventListener("resize", resize, {passive:true});
+	resize();
+
+	const SPEED_FAR = 420, SPEED_NEAR = 760; /* px/сек */
+	const DRIFT = 0.12; /* доля скорости на ветер — совпадает с наклоном штрихов */
+	let offFarX = 0, offFarY = 0, offNearX = 0, offNearY = 0;
+	let last = performance.now();
+
+	function drawLayer(tile, offX, offY){
+		const sx = ((offX % S) + S) % S;
+		const sy = ((offY % S) + S) % S;
+		for(let x = -sx; x < W; x += S){
+			for(let y = -sy; y < H; y += S){
+				ctx.drawImage(tile, x, y);
+			}
+		}
+	}
+
+	/* Дождь не нужен на 60 FPS — 40 глазу не отличить. */
+	const STEP = 1000 / 40;
+	let acc = 0;
+
+	function frame(t){
+		requestAnimationFrame(frame);
+		let dt = (t - last) / 1000;
+		if(dt > 0.05) dt = 0.05; /* после лага не прыгаем */
+		last = t;
+		acc += dt * 1000;
+		if(acc < STEP) return;
+		acc = 0;
+
+		/* смещения уменьшаются — капли едут вниз-вправо, как наклон штрихов */
+		offFarX  -= SPEED_FAR  * DRIFT * dt;
+		offFarY  -= SPEED_FAR  * dt;
+		offNearX -= SPEED_NEAR * DRIFT * dt;
+		offNearY -= SPEED_NEAR * dt;
+
+		ctx.clearRect(0, 0, W, H);
+		drawLayer(tileFar, offFarX, offFarY);
+		drawLayer(tileNear, offNearX, offNearY);
+	}
+	requestAnimationFrame(frame);
+})();
+
+/* ---------- год в футере ---------- */
+document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
